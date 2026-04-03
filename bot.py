@@ -25,11 +25,15 @@ openai_client = OpenAI()
 
 APP_URL = os.getenv("APP_URL", "")  # e.g. https://richard-agent.railway.app
 
-TASKS_FILE = Path(__file__).parent / "tasks.json"
-IDEAS_FILE = Path(__file__).parent / "ideas.json"
-PROFILE_FILE = Path(__file__).parent / "denis_profile.md"
-CONFIG_FILE = Path(__file__).parent / "config.json"
-HISTORY_FILE = Path(__file__).parent / "history.json"
+# DATA_DIR: на Railway монтируем Volume в /data, локально — папка проекта
+DATA_DIR = Path(os.getenv("DATA_DIR", Path(__file__).parent))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+TASKS_FILE   = DATA_DIR / "tasks.json"
+IDEAS_FILE   = DATA_DIR / "ideas.json"
+PROFILE_FILE = DATA_DIR / "denis_profile.md"
+CONFIG_FILE  = DATA_DIR / "config.json"
+HISTORY_FILE = DATA_DIR / "history.json"
 
 
 def load_history() -> list:

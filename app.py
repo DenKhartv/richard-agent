@@ -14,8 +14,11 @@ CORS(app)
 
 client = Anthropic()
 
-TASKS_FILE = Path(__file__).parent / "tasks.json"
-IDEAS_FILE = Path(__file__).parent / "ideas.json"
+DATA_DIR = Path(os.getenv("DATA_DIR", Path(__file__).parent))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+TASKS_FILE = DATA_DIR / "tasks.json"
+IDEAS_FILE = DATA_DIR / "ideas.json"
 
 SYSTEM_PROMPT = """Ты — личный планировщик-агент Дениса. Твоя главная задача: помочь ему начать день с ясной головой и реалистичным планом.
 
