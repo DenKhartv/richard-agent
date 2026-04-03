@@ -3,273 +3,578 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ричард — Календарь</title>
+<title>Мой день</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: 'Nunito', sans-serif;
-    background: var(--tg-theme-bg-color, #faf6f1);
-    color: var(--tg-theme-text-color, #3d2e22);
-    min-height: 100vh;
-    padding: 16px 16px 32px;
-  }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #f5ede3;
+  color: #3d2e22;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
 
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  .header h1 {
-    font-size: 22px;
-    font-weight: 800;
-  }
-  .header .date {
-    font-size: 13px;
-    color: #a08c7a;
-    font-weight: 600;
-  }
+/* Header */
+.header {
+  padding: 24px 20px 16px;
+  text-align: center;
+}
+.greeting {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #b09880;
+  margin-bottom: 4px;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #3d2e22;
+  margin-bottom: 4px;
+}
+.header .date {
+  font-size: 15px;
+  color: #9e8878;
+  font-weight: 600;
+}
 
-  .section {
-    margin-bottom: 24px;
-  }
-  .section-title {
-    font-size: 12px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #a08c7a;
-    margin-bottom: 10px;
-    padding-left: 4px;
-  }
+/* Tabs */
+.tabs {
+  display: flex;
+  margin: 0 16px 16px;
+  background: #ede3d8;
+  border-radius: 14px;
+  padding: 4px;
+  gap: 4px;
+}
+.tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #9e8878;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.tab.active {
+  background: #fff;
+  color: #3d2e22;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.badge {
+  background: #c2552a;
+  color: #fff;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+.tab.active .badge { background: #c2552a; }
+.tab:not(.active) .badge { background: #b09880; }
 
-  .task-card {
-    background: var(--tg-theme-secondary-bg-color, #fff);
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  }
-  .task-card.done {
-    opacity: 0.45;
-  }
+/* Progress */
+.progress-card {
+  margin: 0 16px 12px;
+  background: #ede3d8;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.progress-label { font-size: 14px; font-weight: 700; color: #3d2e22; }
+.progress-stat { font-size: 14px; font-weight: 800; color: #c2552a; }
+.progress-bar-bg {
+  background: #d9cec5;
+  border-radius: 8px;
+  height: 8px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c2552a, #e07a50);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
 
-  .priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .priority-dot.high   { background: #e05252; }
-  .priority-dot.medium { background: #e0a832; }
-  .priority-dot.low    { background: #6aaa64; }
+/* Focus timer */
+.focus-card {
+  margin: 0 16px 16px;
+  background: #ede3d8;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.timer-ring {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+}
+.timer-ring svg {
+  transform: rotate(-90deg);
+}
+.timer-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #3d2e22;
+}
+.focus-right { flex: 1; }
+.focus-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #b09880;
+  margin-bottom: 8px;
+}
+.focus-btns { display: flex; gap: 8px; }
+.focus-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.focus-btn.start { background: #c2552a; color: #fff; }
+.focus-btn.start:active { background: #a8441f; }
+.focus-btn.reset { background: #d9cec5; color: #7a6a5e; }
+.focus-btn.reset:active { background: #ccc0b5; }
 
-  .task-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .task-title {
-    font-size: 15px;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .task-notes {
-    font-size: 12px;
-    color: #a08c7a;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+/* Time sections */
+.time-section { margin: 0 16px 8px; }
+.time-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+}
+.time-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #3d2e22;
+}
+.time-range { font-size: 12px; color: #b09880; font-weight: 600; }
+.time-count { font-size: 13px; font-weight: 700; color: #b09880; }
 
-  .done-btn {
-    background: none;
-    border: 2px solid #ddd0c3;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .done-btn:active { transform: scale(0.9); }
-  .done-btn.checked {
-    background: #6aaa64;
-    border-color: #6aaa64;
-    color: white;
-  }
+/* Task cards */
+.task-card {
+  background: #ede3d8;
+  border-radius: 14px;
+  padding: 14px 14px 14px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.task-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 2px solid #c9bdb4;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.task-check.done-check {
+  background: #6aaa64;
+  border-color: #6aaa64;
+  color: white;
+  font-size: 13px;
+}
+.task-body { flex: 1; min-width: 0; }
+.task-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.task-title.done-title {
+  text-decoration: line-through;
+  color: #b09880;
+}
+.task-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.priority-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.priority-badge.high   { background: #fde8e8; color: #c0392b; }
+.priority-badge.medium { background: #fef3cd; color: #9a6c00; }
+.priority-badge.low    { background: #e8f5e9; color: #2e7d32; }
+.task-notes-text { font-size: 12px; color: #9e8878; font-weight: 600; }
+.task-actions { display: flex; gap: 6px; align-items: center; }
+.task-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #b09880;
+  padding: 2px;
+  line-height: 1;
+}
 
-  .empty {
-    text-align: center;
-    padding: 32px 0;
-    color: #c4b5a5;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+/* Add task */
+.add-task-btn {
+  width: 100%;
+  background: none;
+  border: 2px dashed #c9bdb4;
+  border-radius: 14px;
+  padding: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #b09880;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.add-task-btn:active { background: #ede3d8; }
 
-  .loading {
-    text-align: center;
-    padding: 40px 0;
-    color: #a08c7a;
-    font-size: 14px;
-  }
+/* Ideas tab */
+.idea-card {
+  background: #ede3d8;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.idea-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.idea-body { flex: 1; }
+.idea-text { font-size: 14px; font-weight: 700; line-height: 1.4; }
+.idea-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.idea-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9e8878;
+  background: #d9cec5;
+  border-radius: 6px;
+  padding: 1px 7px;
+}
+.idea-date { font-size: 11px; color: #b09880; margin-top: 2px; }
 
-  .refresh-btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    background: var(--tg-theme-button-color, #c2552a);
-    color: var(--tg-theme-button-text-color, #fff);
-    border: none;
-    border-radius: 14px;
-    font-family: 'Nunito', sans-serif;
-    font-size: 15px;
-    font-weight: 800;
-    cursor: pointer;
-    margin-top: 8px;
-  }
+/* Empty */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #b09880;
+}
+.empty-icon { font-size: 40px; margin-bottom: 8px; }
+.empty-text { font-size: 14px; font-weight: 700; }
+
+/* Panel */
+.panel { display: none; }
+.panel.active { display: block; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>📅 Задачи</h1>
+  <div class="greeting" id="greeting">Доброе утро, Денис</div>
+  <h1>Мой день</h1>
   <div class="date" id="headerDate"></div>
 </div>
 
-<div id="content"><div class="loading">Загружаю...</div></div>
+<div class="tabs">
+  <button class="tab active" id="tab-day" onclick="switchTab('day')">
+    📋 День <span class="badge" id="badge-day">0</span>
+  </button>
+  <button class="tab" id="tab-ideas" onclick="switchTab('ideas')">
+    💡 Идеи <span class="badge" id="badge-ideas">0</span>
+  </button>
+</div>
 
-<button class="refresh-btn" onclick="loadTasks()">Обновить</button>
+<!-- Day panel -->
+<div class="panel active" id="panel-day">
+  <div class="progress-card">
+    <div class="progress-header">
+      <span class="progress-label">Прогресс дня</span>
+      <span class="progress-stat" id="progress-stat">0/0 — 0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="focus-card">
+    <div class="timer-ring">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="30" fill="none" stroke="#d9cec5" stroke-width="5"/>
+        <circle cx="36" cy="36" r="30" fill="none" stroke="#c2552a" stroke-width="5"
+          stroke-dasharray="188.5" id="timer-arc" stroke-dashoffset="0" stroke-linecap="round"/>
+      </svg>
+      <div class="timer-text" id="timer-display">25:00</div>
+    </div>
+    <div class="focus-right">
+      <div class="focus-label">Фокус</div>
+      <div class="focus-btns">
+        <button class="focus-btn start" id="timer-btn" onclick="toggleTimer()">Старт</button>
+        <button class="focus-btn reset" onclick="resetTimer()">Сброс</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tasks-container"></div>
+</div>
+
+<!-- Ideas panel -->
+<div class="panel" id="panel-ideas">
+  <div class="time-section">
+    <div id="ideas-container"></div>
+  </div>
+</div>
 
 <script>
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
-    tg.ready();
-    tg.expand();
-  }
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
 
-  // Header date
-  const now = new Date();
-  document.getElementById('headerDate').textContent = now.toLocaleDateString('ru-RU', {
-    day: 'numeric', month: 'long'
+// Header
+const now = new Date();
+const h = now.getHours();
+document.getElementById('greeting').textContent =
+  (h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер') + ', Денис';
+document.getElementById('headerDate').textContent = now.toLocaleDateString('ru-RU', {
+  weekday: 'long', day: 'numeric', month: 'long'
+}).replace(/^./, c => c.toUpperCase());
+
+// Tabs
+function switchTab(tab) {
+  ['day','ideas'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+// ── Timer ──────────────────────────────────────────────────────────────────
+const FOCUS_SEC = 25 * 60;
+let timerLeft = FOCUS_SEC;
+let timerRunning = false;
+let timerInterval = null;
+const arc = document.getElementById('timer-arc');
+const CIRCUMFERENCE = 188.5;
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(timerLeft / 60)).padStart(2,'0');
+  const s = String(timerLeft % 60).padStart(2,'0');
+  document.getElementById('timer-display').textContent = `${m}:${s}`;
+  const pct = timerLeft / FOCUS_SEC;
+  arc.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-btn').textContent = 'Старт';
+  } else {
+    timerRunning = true;
+    document.getElementById('timer-btn').textContent = 'Пауза';
+    timerInterval = setInterval(() => {
+      timerLeft--;
+      updateTimerDisplay();
+      if (timerLeft <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timer-btn').textContent = 'Старт';
+        if (tg) tg.HapticFeedback?.notificationOccurred('success');
+      }
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerLeft = FOCUS_SEC;
+  document.getElementById('timer-btn').textContent = 'Старт';
+  updateTimerDisplay();
+}
+
+updateTimerDisplay();
+
+// ── Tasks ─────────────────────────────────────────────────────────────────
+let allTasks = [];
+
+const PRIORITY_LABEL = { high: 'Обязательно', medium: 'Важно', low: 'Когда-нибудь' };
+const TIME_BLOCKS = [
+  { key: 'morning', label: 'Утро',   icon: '🌤️', range: '8:00 — 12:00', start: 8,  end: 12 },
+  { key: 'day',     label: 'День',   icon: '⛅',  range: '12:00 — 18:00', start: 12, end: 18 },
+  { key: 'evening', label: 'Вечер',  icon: '🌙',  range: '18:00 — 23:00', start: 18, end: 24 },
+  { key: 'anytime', label: 'В любое время', icon: '📌', range: '', start: -1, end: -1 },
+];
+
+function getBlock(task) {
+  // high → утро, medium → день, low → вечер / любое время
+  if (task.priority === 'high')   return 'morning';
+  if (task.priority === 'medium') return 'day';
+  return 'anytime';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderTasks(tasks) {
+  allTasks = tasks;
+  const today = new Date().toISOString().slice(0,10);
+  const todayTasks = tasks.filter(t => t.date === today && t.status === 'pending');
+  const doneTodayCount = tasks.filter(t => t.date === today && t.status === 'done').length;
+  const total = todayTasks.length + doneTodayCount;
+  const pct = total ? Math.round(doneTodayCount / total * 100) : 0;
+
+  document.getElementById('progress-stat').textContent = `${doneTodayCount}/${total} — ${pct}%`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('badge-day').textContent = todayTasks.length;
+
+  // Group by block
+  const groups = {};
+  TIME_BLOCKS.forEach(b => groups[b.key] = []);
+  todayTasks.forEach(t => groups[getBlock(t)].push(t));
+
+  let html = '';
+  TIME_BLOCKS.forEach(block => {
+    const items = groups[block.key];
+    if (!items.length) return;
+    html += `<div class="time-section">
+      <div class="time-header">
+        <div class="time-title">
+          <span>${block.icon}</span>
+          <span>${block.label}</span>
+          ${block.range ? `<span class="time-range">${block.range}</span>` : ''}
+        </div>
+        <span class="time-count">0/${items.length}</span>
+      </div>`;
+    items.forEach(t => {
+      html += `
+      <div class="task-card" id="card-${t.id}">
+        <button class="task-check" id="chk-${t.id}" onclick="markDone('${t.id}')"></button>
+        <div class="task-body">
+          <div class="task-title" id="title-${t.id}">${escHtml(t.title)}</div>
+          <div class="task-meta">
+            <span class="priority-badge ${t.priority}">${PRIORITY_LABEL[t.priority]||t.priority}</span>
+            ${t.notes ? `<span class="task-notes-text">${escHtml(t.notes)}</span>` : ''}
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="task-action-btn" onclick="removeCard('${t.id}')">×</button>
+        </div>
+      </div>`;
+    });
+    html += `<button class="add-task-btn">+ Добавить задачу</button></div>`;
   });
 
-  const PRIORITY_LABEL = { high: 'Срочно', medium: 'Важно', low: 'Не горит' };
-
-  function todayStr() {
-    return new Date().toISOString().slice(0, 10);
-  }
-  function tomorrowStr() {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().slice(0, 10);
-  }
-  function formatDate(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  if (!html) {
+    html = `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-text">На сегодня задач нет!</div></div>`;
   }
 
-  async function loadTasks() {
-    document.getElementById('content').innerHTML = '<div class="loading">Загружаю...</div>';
-    try {
-      const res = await fetch('/api/tasks');
-      const data = await res.json();
-      renderTasks(data.tasks || []);
-    } catch {
-      document.getElementById('content').innerHTML =
-        '<div class="empty"><div class="empty-icon">⚠️</div>Не удалось загрузить задачи</div>';
-    }
+  document.getElementById('tasks-container').innerHTML = html;
+}
+
+async function markDone(id) {
+  const chk = document.getElementById('chk-'+id);
+  if (!chk || chk.classList.contains('done-check')) return;
+  chk.classList.add('done-check');
+  chk.textContent = '✓';
+  const title = document.getElementById('title-'+id);
+  if (title) title.classList.add('done-title');
+  try {
+    await fetch(`/api/tasks/${id}/done`, { method: 'POST' });
+    setTimeout(() => {
+      const card = document.getElementById('card-'+id);
+      if (card) card.remove();
+      loadAll();
+    }, 600);
+  } catch { chk.classList.remove('done-check'); chk.textContent = ''; }
+}
+
+function removeCard(id) {
+  const card = document.getElementById('card-'+id);
+  if (card) card.remove();
+}
+
+// ── Ideas ─────────────────────────────────────────────────────────────────
+function renderIdeas(ideas) {
+  document.getElementById('badge-ideas').textContent = ideas.length;
+  if (!ideas.length) {
+    document.getElementById('ideas-container').innerHTML =
+      `<div class="empty"><div class="empty-icon">💡</div><div class="empty-text">Идей пока нет</div></div>`;
+    return;
   }
+  const sorted = [...ideas].reverse();
+  let html = '';
+  sorted.forEach(i => {
+    const tags = (i.tags||[]).map(t => `<span class="idea-tag">${escHtml(t)}</span>`).join('');
+    const date = i.created_at ? i.created_at.slice(0,10) : '';
+    html += `<div class="idea-card">
+      <div class="idea-icon">💡</div>
+      <div class="idea-body">
+        <div class="idea-text">${escHtml(i.text)}</div>
+        ${tags ? `<div class="idea-tags">${tags}</div>` : ''}
+        ${date ? `<div class="idea-date">${date}</div>` : ''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('ideas-container').innerHTML = html;
+}
 
-  function renderTasks(tasks) {
-    const today = todayStr();
-    const tomorrow = tomorrowStr();
-
-    const groups = {
-      today:    { label: 'Сегодня', items: [] },
-      tomorrow: { label: 'Завтра',  items: [] },
-      later:    { label: 'Позже',   items: [] },
-    };
-
-    for (const t of tasks) {
-      if (t.date === today)         groups.today.items.push(t);
-      else if (t.date === tomorrow) groups.tomorrow.items.push(t);
-      else                          groups.later.items.push(t);
-    }
-
-    const sortFn = (a, b) =>
-      ({'high':0,'medium':1,'low':2}[a.priority]||3) -
-      ({'high':0,'medium':1,'low':2}[b.priority]||3);
-
-    let html = '';
-    let hasAny = false;
-
-    for (const [key, group] of Object.entries(groups)) {
-      if (!group.items.length) continue;
-      hasAny = true;
-      group.items.sort(sortFn);
-      html += `<div class="section">
-        <div class="section-title">${group.label}</div>`;
-      for (const t of group.items) {
-        const dateLabel = key === 'later' ? ` · ${formatDate(t.date)}` : '';
-        html += `
-        <div class="task-card" id="card-${t.id}">
-          <div class="priority-dot ${t.priority}"></div>
-          <div class="task-info">
-            <div class="task-title">${escHtml(t.title)}</div>
-            ${t.notes ? `<div class="task-notes">${escHtml(t.notes)}${dateLabel}</div>` : (dateLabel ? `<div class="task-notes">${dateLabel.trim()}</div>` : '')}
-          </div>
-          <button class="done-btn" id="btn-${t.id}" onclick="markDone('${t.id}')" title="Выполнено">✓</button>
-        </div>`;
-      }
-      html += `</div>`;
-    }
-
-    if (!hasAny) {
-      html = `<div class="empty"><div class="empty-icon">🎉</div>Задач нет — отдыхай!</div>`;
-    }
-
-    document.getElementById('content').innerHTML = html;
+// ── Load ──────────────────────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    const [tasksRes, ideasRes] = await Promise.all([
+      fetch('/api/tasks'),
+      fetch('/api/ideas'),
+    ]);
+    const tasksData = await tasksRes.json();
+    const ideasData = await ideasRes.json();
+    renderTasks(tasksData.tasks || []);
+    renderIdeas(ideasData.ideas || []);
+  } catch(e) {
+    document.getElementById('tasks-container').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Не удалось загрузить</div></div>`;
   }
+}
 
-  async function markDone(id) {
-    const btn = document.getElementById('btn-' + id);
-    const card = document.getElementById('card-' + id);
-    if (!btn || btn.classList.contains('checked')) return;
-
-    btn.classList.add('checked');
-    btn.textContent = '✓';
-
-    try {
-      await fetch(`/api/tasks/${id}/done`, { method: 'POST' });
-      setTimeout(() => {
-        card.classList.add('done');
-        setTimeout(() => card.remove(), 400);
-      }, 300);
-    } catch {
-      btn.classList.remove('checked');
-      btn.textContent = '✓';
-    }
-  }
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  loadTasks();
+loadAll();
 </script>
 </body>
 </html>

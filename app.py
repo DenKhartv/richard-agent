@@ -101,6 +101,15 @@ def get_tasks():
     return jsonify({"tasks": active})
 
 
+@app.route("/api/ideas", methods=["GET"])
+def get_ideas():
+    if IDEAS_FILE.exists():
+        data = json.loads(IDEAS_FILE.read_text(encoding="utf-8"))
+    else:
+        data = {"ideas": []}
+    return jsonify(data)
+
+
 @app.route("/api/tasks/<task_id>/done", methods=["POST"])
 def mark_done(task_id):
     if not TASKS_FILE.exists():
