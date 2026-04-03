@@ -454,35 +454,49 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function formatDateLabel(dateStr) {
+  const today = new Date().toISOString().slice(0,10);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+  if (dateStr === today) return 'Сегодня';
+  if (dateStr === tomorrow) return 'Завтра';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+}
+
 function renderTasks(tasks) {
   allTasks = tasks;
   const today = new Date().toISOString().slice(0,10);
-  const todayTasks = tasks.filter(t => t.date === today && t.status === 'pending');
-  const doneTodayCount = tasks.filter(t => t.date === today && t.status === 'done').length;
-  const total = todayTasks.length + doneTodayCount;
-  const pct = total ? Math.round(doneTodayCount / total * 100) : 0;
+  const pending = tasks.filter(t => t.status === 'pending');
+  const doneToday = tasks.filter(t => t.date === today && t.status === 'done').length;
+  const totalToday = tasks.filter(t => t.date === today).length;
+  const pct = totalToday ? Math.round(doneToday / totalToday * 100) : 0;
 
-  document.getElementById('progress-stat').textContent = `${doneTodayCount}/${total} — ${pct}%`;
+  document.getElementById('progress-stat').textContent = `${doneToday}/${totalToday} — ${pct}%`;
   document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('badge-day').textContent = todayTasks.length;
+  document.getElementById('badge-day').textContent = pending.length;
 
-  // Group by block
-  const groups = {};
-  TIME_BLOCKS.forEach(b => groups[b.key] = []);
-  todayTasks.forEach(t => groups[getBlock(t)].push(t));
+  // Group by date
+  const byDate = {};
+  pending.forEach(t => {
+    if (!byDate[t.date]) byDate[t.date] = [];
+    byDate[t.date].push(t);
+  });
 
+  const sortedDates = Object.keys(byDate).sort();
   let html = '';
-  TIME_BLOCKS.forEach(block => {
-    const items = groups[block.key];
-    if (!items.length) return;
+
+  sortedDates.forEach(dateStr => {
+    const items = byDate[dateStr].sort((a,b) =>
+      ({'high':0,'medium':1,'low':2}[a.priority]||3) - ({'high':0,'medium':1,'low':2}[b.priority]||3)
+    );
+    const label = formatDateLabel(dateStr);
     html += `<div class="time-section">
       <div class="time-header">
         <div class="time-title">
-          <span>${block.icon}</span>
-          <span>${block.label}</span>
-          ${block.range ? `<span class="time-range">${block.range}</span>` : ''}
+          <span>${dateStr === today ? '🌤️' : '📅'}</span>
+          <span>${label}</span>
         </div>
-        <span class="time-count">0/${items.length}</span>
+        <span class="time-count">${items.length}</span>
       </div>`;
     items.forEach(t => {
       html += `
@@ -500,11 +514,11 @@ function renderTasks(tasks) {
         </div>
       </div>`;
     });
-    html += `<button class="add-task-btn">+ Добавить задачу</button></div>`;
+    html += `</div>`;
   });
 
   if (!html) {
-    html = `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-text">На сегодня задач нет!</div></div>`;
+    html = `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-text">Задач нет — отдыхай!</div></div>`;
   }
 
   document.getElementById('tasks-container').innerHTML = html;
