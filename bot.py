@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from pathlib import Path
 import tempfile
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from anthropic import Anthropic
 from openai import OpenAI
@@ -592,7 +592,7 @@ def calendar_keyboard() -> InlineKeyboardMarkup | None:
     if not APP_URL:
         return None
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton("📅 Открыть календарь", web_app={"url": APP_URL})
+        InlineKeyboardButton("📅 Открыть календарь", web_app=WebAppInfo(url=APP_URL))
     ]])
 
 
