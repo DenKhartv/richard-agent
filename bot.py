@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from pathlib import Path
 import tempfile
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, MenuButtonWebApp, BotCommand
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from anthropic import Anthropic
 from openai import OpenAI
@@ -693,7 +693,21 @@ def main():
         IDEAS_FILE.write_text(json.dumps({"ideas": []}, ensure_ascii=False, indent=2), encoding="utf-8")
         print("💡 Создан ideas.json")
 
-    app = Application.builder().token(token).build()
+    async def post_init(application):
+        if APP_URL:
+            await application.bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(text="📅 Календарь", web_app=WebAppInfo(url=APP_URL))
+            )
+        await application.bot.set_my_commands([
+            BotCommand("today", "Задачи на сегодня"),
+            BotCommand("week", "Задачи на неделю"),
+            BotCommand("ideas", "Мои идеи"),
+            BotCommand("profile", "Мой профиль"),
+            BotCommand("done", "Отметить задачу выполненной"),
+            BotCommand("reset", "Очистить историю"),
+        ])
+
+    app = Application.builder().token(token).post_init(post_init).build()
 
     # Commands
     app.add_handler(CommandHandler("start", start))
@@ -709,7 +723,7 @@ def main():
     app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
-    # Reminder: ideas every 3 days (259200 seconds), first run after 3 days
+    # Reminder: ideas every 3 days
     app.job_queue.run_repeating(
         send_ideas_reminder,
         interval=60 * 60 * 24 * 3,
