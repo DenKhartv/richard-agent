@@ -29,8 +29,24 @@ TASKS_FILE = Path(__file__).parent / "tasks.json"
 IDEAS_FILE = Path(__file__).parent / "ideas.json"
 PROFILE_FILE = Path(__file__).parent / "denis_profile.md"
 CONFIG_FILE = Path(__file__).parent / "config.json"
+HISTORY_FILE = Path(__file__).parent / "history.json"
 
-conversation_history = []
+
+def load_history() -> list:
+    if HISTORY_FILE.exists():
+        try:
+            return json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def save_history(history: list):
+    # Keep last 100 messages on disk
+    HISTORY_FILE.write_text(json.dumps(history[-100:], ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+conversation_history = load_history()
 
 SYSTEM_PROMPT = """Ты — личный ИИ-агент Дениса по имени Ричард.
 
@@ -338,6 +354,7 @@ async def process_with_claude(user_message: str) -> str:
     )
 
     conversation_history.append({"role": "user", "content": user_message})
+    save_history(conversation_history)
     messages_to_send = conversation_history[-20:]
 
     added_tasks = []
@@ -405,6 +422,7 @@ async def process_with_claude(user_message: str) -> str:
     )
 
     conversation_history.append({"role": "assistant", "content": assistant_text})
+    save_history(conversation_history)
 
     suffix_parts = []
     if added_tasks:
@@ -585,6 +603,7 @@ async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global conversation_history
     conversation_history = []
+    save_history(conversation_history)
     await update.message.reply_text("История очищена. Начнём заново 🔄\n_(Профиль и задачи сохранены)_", parse_mode="Markdown")
 
 

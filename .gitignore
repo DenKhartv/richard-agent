@@ -3,6 +3,7 @@ tasks.json
 ideas.json
 denis_profile.md
 config.json
+history.json
 __pycache__/
 *.pyc
 *.pyo
