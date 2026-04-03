@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Агент планирования</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #faf6f1 0%, #f5ebe0 50%, #ede0d4 100%);
+    font-family: 'Nunito', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 40px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .greeting {
+    font-size: 13px;
+    color: #b5a494;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #3d2e22;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #a08c7a;
+    font-weight: 500;
+  }
+
+  .container { width: 100%; max-width: 520px; }
+
+  /* Chat area */
+  .chat-box {
+    background: rgba(253,250,247,0.8);
+    border: 1.5px solid #e3d5c8;
+    border-radius: 20px;
+    padding: 20px;
+    min-height: 280px;
+    max-height: 420px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #c4b5a5;
+    gap: 8px;
+    text-align: center;
+    padding: 20px;
+  }
+  .empty-icon { font-size: 40px; }
+  .empty-text { font-size: 14px; font-weight: 600; color: #b5a494; }
+  .empty-hint { font-size: 12px; line-height: 1.5; }
+
+  .message {
+    display: flex;
+    gap: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .avatar.agent { background: #c2552a18; }
+  .avatar.user-av { background: #8a9a7b18; }
+
+  .bubble {
+    max-width: 82%;
+    padding: 12px 15px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+  .bubble.agent-bubble {
+    background: #fff;
+    border: 1.5px solid #e8d8cc;
+    color: #4a3a2e;
+    border-bottom-left-radius: 4px;
+  }
+  .bubble.user-bubble {
+    background: linear-gradient(135deg, #c2552a, #d4794f);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .typing {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 15px;
+    background: #fff;
+    border: 1.5px solid #e8d8cc;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    background: #c2552a;
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Voice button */
+  .voice-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .voice-btn.idle {
+    background: linear-gradient(135deg, #c2552a, #d4794f);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(194,85,42,0.3);
+  }
+  .voice-btn.idle:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(194,85,42,0.4); }
+  .voice-btn.recording {
+    background: linear-gradient(135deg, #8a1a1a, #c22a2a);
+    color: #fff;
+    animation: pulse-border 1.5s infinite;
+  }
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(194,42,42,0.4); }
+    50% { box-shadow: 0 0 0 10px rgba(194,42,42,0); }
+  }
+
+  .rec-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  /* Text area row */
+  .text-row {
+    display: flex;
+    gap: 8px;
+  }
+  textarea {
+    flex: 1;
+    border: 1.5px solid #e3d5c8;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: #4a3a2e;
+    background: #fdfaf7;
+    resize: none;
+    min-height: 52px;
+    max-height: 120px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  textarea:focus { border-color: #c2a87a; }
+  textarea::placeholder { color: #c4b5a5; }
+
+  .send-btn {
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 14px;
+    background: #c2552a;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { background: #a8441f; transform: scale(1.05); }
+  .send-btn:disabled { background: #ddd0c3; cursor: not-allowed; transform: none; }
+
+  .reset-btn {
+    background: none;
+    border: 1.5px solid #e3d5c8;
+    border-radius: 10px;
+    padding: 8px 16px;
+    color: #b5a494;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-self: center;
+  }
+  .reset-btn:hover { border-color: #c4b5a5; color: #8a7a6a; }
+
+  .status-bar {
+    font-size: 12px;
+    color: #b5a494;
+    text-align: center;
+    font-weight: 600;
+    min-height: 18px;
+    margin-top: -4px;
+  }
+  .status-bar.recording-status { color: #c22a2a; }
+  .status-bar.ok { color: #8a9a7b; }
+
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: #c4b5a5;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="greeting" id="greeting">Доброе утро</div>
+  <h1>Мой агент</h1>
+  <div class="subtitle">Расскажи голосом — помогу разобраться с днём</div>
+</div>
+
+<div class="container">
+  <div class="chat-box" id="chatBox">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🎙️</div>
+      <div class="empty-text">Нажми кнопку и говори</div>
+      <div class="empty-hint">Расскажи, что планируешь на сегодня.<br/>Агент поможет разобраться с приоритетами.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="voice-btn idle" id="voiceBtn" onclick="toggleRecording()">
+      <span id="voiceIcon">🎙️</span>
+      <span id="voiceLabel">Говорить</span>
+    </button>
+
+    <div class="status-bar" id="statusBar"></div>
+
+    <div class="text-row">
+      <textarea id="textInput" placeholder="Или напиши сюда..." rows="2"
+        onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendText()">↑</button>
+    </div>
+
+    <button class="reset-btn" onclick="resetChat()">Начать заново</button>
+  </div>
+
+  <div class="hint">Работает через браузерное распознавание речи (Chrome / Edge)</div>
+</div>
+
+<script>
+  let recognition = null;
+  let isRecording = false;
+  let finalTranscript = '';
+
+  // Greeting by time
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    h < 12 ? 'Доброе утро, Денис' : h < 18 ? 'Добрый день, Денис' : 'Добрый вечер, Денис';
+
+  // Setup Web Speech API
+  function setupRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
+
+    const rec = new SpeechRecognition();
+    rec.lang = 'ru-RU';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalTranscript += e.results[i][0].transcript + ' ';
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      const display = finalTranscript + interim;
+      document.getElementById('textInput').value = display;
+      setStatus(`🎙️ ${Math.round(display.split(' ').length)} слов...`, 'recording-status');
+    };
+
+    rec.onerror = (e) => {
+      if (e.error !== 'no-speech') {
+        setStatus('Ошибка микрофона: ' + e.error, '');
+        stopRecording();
+      }
+    };
+
+    rec.onend = () => {
+      if (isRecording) rec.start(); // auto-restart for long sessions
+    };
+
+    return rec;
+  }
+
+  function toggleRecording() {
+    if (!isRecording) startRecording();
+    else stopRecording();
+  }
+
+  function startRecording() {
+    recognition = setupRecognition();
+    if (!recognition) {
+      setStatus('Браузер не поддерживает распознавание речи. Используй Chrome.', '');
+      return;
+    }
+    finalTranscript = '';
+    isRecording = true;
+    recognition.start();
+
+    const btn = document.getElementById('voiceBtn');
+    btn.className = 'voice-btn recording';
+    document.getElementById('voiceIcon').textContent = '⏹️';
+    document.getElementById('voiceLabel').textContent = 'Остановить';
+    setStatus('Запись... говори', 'recording-status');
+  }
+
+  function stopRecording() {
+    isRecording = false;
+    if (recognition) { recognition.stop(); recognition = null; }
+
+    const btn = document.getElementById('voiceBtn');
+    btn.className = 'voice-btn idle';
+    document.getElementById('voiceIcon').textContent = '🎙️';
+    document.getElementById('voiceLabel').textContent = 'Говорить';
+
+    const text = document.getElementById('textInput').value.trim();
+    if (text) {
+      setStatus('Готово — нажми ↑ чтобы отправить', 'ok');
+    } else {
+      setStatus('', '');
+    }
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendText();
+    }
+  }
+
+  async function sendText() {
+    const input = document.getElementById('textInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    finalTranscript = '';
+    setStatus('', '');
+
+    addMessage('user', text);
+    showTyping();
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      hideTyping();
+      if (data.reply) addMessage('agent', data.reply);
+      else addMessage('agent', '⚠️ Что-то пошло не так. Попробуй ещё раз.');
+    } catch {
+      hideTyping();
+      addMessage('agent', '⚠️ Не могу подключиться к серверу. Убедись, что сервер запущен.');
+    }
+
+    document.getElementById('sendBtn').disabled = false;
+  }
+
+  async function resetChat() {
+    await fetch('/api/reset', { method: 'POST' });
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = `
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🎙️</div>
+        <div class="empty-text">Нажми кнопку и говори</div>
+        <div class="empty-hint">Расскажи, что планируешь на сегодня.<br/>Агент поможет разобраться с приоритетами.</div>
+      </div>`;
+    setStatus('', '');
+  }
+
+  function addMessage(role, text) {
+    const chatBox = document.getElementById('chatBox');
+    const empty = document.getElementById('emptyState');
+    if (empty) empty.remove();
+
+    const wrap = document.createElement('div');
+    wrap.className = `message ${role}`;
+
+    const av = document.createElement('div');
+    av.className = `avatar ${role === 'agent' ? 'agent' : 'user-av'}`;
+    av.textContent = role === 'agent' ? '🤖' : '👤';
+
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${role === 'agent' ? 'agent-bubble' : 'user-bubble'}`;
+    bubble.textContent = text;
+
+    wrap.appendChild(av);
+    wrap.appendChild(bubble);
+    chatBox.appendChild(wrap);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  let typingEl = null;
+  function showTyping() {
+    const chatBox = document.getElementById('chatBox');
+    typingEl = document.createElement('div');
+    typingEl.className = 'message agent';
+    typingEl.innerHTML = `
+      <div class="avatar agent">🤖</div>
+      <div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    chatBox.appendChild(typingEl);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function hideTyping() {
+    if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
+
+  function setStatus(text, cls) {
+    const el = document.getElementById('statusBar');
+    el.textContent = text;
+    el.className = 'status-bar ' + (cls || '');
+  }
+</script>
+</body>
+</html>
