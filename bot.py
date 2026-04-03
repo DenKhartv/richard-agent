@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta
 from pathlib import Path
 import tempfile
 
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from anthropic import Anthropic
 from openai import OpenAI
@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 anthropic_client = Anthropic()
 openai_client = OpenAI()
+
+APP_URL = os.getenv("APP_URL", "")  # e.g. https://richard-agent.railway.app
 
 TASKS_FILE = Path(__file__).parent / "tasks.json"
 IDEAS_FILE = Path(__file__).parent / "ideas.json"
@@ -586,6 +588,14 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("История очищена. Начнём заново 🔄\n_(Профиль и задачи сохранены)_", parse_mode="Markdown")
 
 
+def calendar_keyboard() -> InlineKeyboardMarkup | None:
+    if not APP_URL:
+        return None
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("📅 Открыть календарь", web_app={"url": APP_URL})
+    ]])
+
+
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_chat_id(update.effective_chat.id)
     await update.message.reply_text("🎙️ Слушаю...")
@@ -610,7 +620,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("💭 Думаю...")
 
         reply = await process_with_claude(transcript)
-        await update.message.reply_text(reply, parse_mode="Markdown")
+        await update.message.reply_text(reply, parse_mode="Markdown", reply_markup=calendar_keyboard())
 
     except Exception as e:
         logger.error(f"Voice error: {e}")
@@ -628,7 +638,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("💭 Думаю...")
     try:
         reply = await process_with_claude(text)
-        await update.message.reply_text(reply, parse_mode="Markdown")
+        await update.message.reply_text(reply, parse_mode="Markdown", reply_markup=calendar_keyboard())
     except Exception as e:
         logger.error(f"Text error: {e}")
         await update.message.reply_text("Что-то пошло не так. Попробуй ещё раз.")
